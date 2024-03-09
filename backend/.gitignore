@@ -1,4 +1,11 @@
+# Ignore client_secret.json in the current directory
 ./client_secret.json
+
+# Ignore client_secret1.json in the current directory
 ./client_secret1.json
+
+# Ignore node_modules directory in the current directory
 ./node_modules
+
+# Ignore client_oauth_token.json (located outside of backend)
 ../client_oauth_token.json
