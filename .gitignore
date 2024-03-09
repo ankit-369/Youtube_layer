@@ -9,3 +9,5 @@ backend/node_modules
 
 # Ignore client_oauth_token.json (located outside of backend)
 client_oauth_token.json
+
+demo.json
