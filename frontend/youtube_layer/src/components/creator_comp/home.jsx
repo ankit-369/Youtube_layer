@@ -10,8 +10,8 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const [videosResponse, channelsResponse] = await Promise.all([
-          axios.get('http://localhost:3000/video'),
-          axios.get('http://localhost:3000/info')
+          axios.get('http://localhost:3000/api/v1/creator/video'),
+          axios.get('http://localhost:3000/api/v1/creator/info')
         ]);
         setVideos(videosResponse.data.videos);
         setChannels(channelsResponse.data.channels);
@@ -25,7 +25,7 @@ const Home = () => {
   }, []);
 
   const handleRedirect = () => {
-    window.location.href = "http://localhost:3000";
+    window.location.href = "http://localhost:3000/api/v1/auth";
   };
 
   return (
