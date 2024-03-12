@@ -7,6 +7,9 @@ backend/client_secret1.json
 # Ignore node_modules directory in the current directory
 backend/node_modules
 
+backend/db.js
+
+
 # Ignore client_oauth_token.json (located outside of backend)
 client_oauth_token.json
 

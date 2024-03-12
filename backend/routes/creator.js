@@ -3,7 +3,7 @@ const router = express.Router()
 const fs = require('fs');
 const { google } = require('googleapis');
 // const OAuth2 = google.auth.OAuth2;
-const { authorize } = require("./functions");
+const { authorize , authMiddleware} = require("./functions");
 
 var cors = require('cors')
 
@@ -17,14 +17,16 @@ app.use(express.json());
 
 
 
-router.get('/info', (req, res) => {
+router.get('/info',(req, res) => {
+    const authHeader = req.headers['authorization'];
+
     fs.readFile('client_secret.json', (err, content) => {
         if (err) {
             console.log('Error loading client secret file: ' + err);
             return;
         }
-        authorize(JSON.parse(content), res, (auth) => {
-            getChannel(auth, req, res);
+        authorize(JSON.parse(content), res,authHeader, (oauth2Client) => {
+            getChannel(oauth2Client, req, res);
         });
     });
 });
@@ -66,14 +68,16 @@ function getChannel(auth, req, res) {
 
 
 
-router.get('/video', (req, res) => {
+router.get('/video',(req, res) => {
+    const authHeader = req.headers['authorization'];
+
     fs.readFile('client_secret.json', (err, content) => {
         if (err) {
             console.log('Error loading client secret file: ' + err);
             return;
         }
-        authorize(JSON.parse(content), res, (auth) => {
-            listUploadedVideos(auth, req, res);
+        authorize(JSON.parse(content), res,authHeader, (oauth2Client) =>{
+            listUploadedVideos(oauth2Client, req, res);
         });
     });
 });
