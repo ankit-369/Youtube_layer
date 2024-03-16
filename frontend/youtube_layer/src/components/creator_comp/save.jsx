@@ -16,7 +16,6 @@ function Save() {
     }
 
     // Redirect to another URL
-    // history.push('http://localhost:5173/home');
     navigate('/home');
 
   },[]);

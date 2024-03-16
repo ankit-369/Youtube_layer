@@ -8,6 +8,8 @@ backend/client_secret1.json
 backend/node_modules
 
 backend/db.js
+backend/config.js
+
 
 
 # Ignore client_oauth_token.json (located outside of backend)

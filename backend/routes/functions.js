@@ -7,7 +7,6 @@ const OAuth2 = google.auth.OAuth2;
 // var cors = require('cors')
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require("../config");
-const { Console } = require('console');
 
 
 const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
@@ -66,7 +65,7 @@ function authorize(credentials, res,authHeader = null, callback) {
                 const users_authHeader = tokenParts[1];
                 jwt.verify(users_authHeader, JWT_SECRET, (err, decoded) => {
                     if (err) {
-                        return res.status(401).json({ error: 'Invalid token' });
+                        return res.status(401).json({ msg: 'Invalid token' });
                     }
                     const mytoken = JSON.parse(decoded.tokenData);
                     try{
@@ -107,12 +106,12 @@ function storeToken(token,res) {
         const tokenData = JSON.stringify({ token });
         const savedtoken = jwt.sign({ tokenData }, JWT_SECRET);
      
-        fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-            if (err) throw err;
-            console.log('Token stored to ' + TOKEN_PATH);
-        });
-        console.log('this is token data :- ',tokenData);
-console.log('\n\n\n\n\nthis is saved  token :- ', savedtoken);
+//         fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+//             if (err) throw err;
+//             console.log('Token stored to ' + TOKEN_PATH);
+//         });
+//         console.log('this is token data :- ',tokenData);
+// console.log('\n\n\n\n\nthis is saved  token :- ', savedtoken);
         res.redirect(`http://localhost:5173/?token=${savedtoken}`);
         // Return the redirect URL with the token as a query parameter
         // return `http://localhost:5173/?token=${savedtoken}`;

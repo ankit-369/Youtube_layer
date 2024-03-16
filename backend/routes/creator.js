@@ -16,10 +16,23 @@ app.use(express.json());
 
 
 
-
 router.get('/info',(req, res) => {
+    const AnotherToken = req.headers['anothertoken'];
     const authHeader = req.headers['authorization'];
 
+    console.log('\n\nanothertokrn :-', AnotherToken);
+    console.log('\n\nauthtoken :-', authHeader);
+    if(AnotherToken == "null"){
+        console.log("redirected to signup")
+
+       return  res.json({msg:"token is not set"});
+    }
+    if(authHeader ==="Bearer null"){
+        return  res.json({msg:"youtube token is not set"});
+
+    }
+// console.log("\n\n hahahahah :-",AnotherToken)
+// console.log("\n\n\n");
     fs.readFile('client_secret.json', (err, content) => {
         if (err) {
             console.log('Error loading client secret file: ' + err);
@@ -69,8 +82,20 @@ function getChannel(auth, req, res) {
 
 
 router.get('/video',(req, res) => {
+    const AnotherToken = req.headers['anothertoken'];
     const authHeader = req.headers['authorization'];
 
+    console.log('\n\nanothertokrn :-', AnotherToken);
+    console.log('\n\nauthtoken :-', authHeader);
+
+    if(AnotherToken == "null"){
+        console.log("redirected to signup")
+       return  res.json({msg:"token is not set"});
+    }
+    if(authHeader === "Bearer null"){
+        return  res.json({msg:"youtube token is not set"});
+
+    }
     fs.readFile('client_secret.json', (err, content) => {
         if (err) {
             console.log('Error loading client secret file: ' + err);
