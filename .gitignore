@@ -10,7 +10,13 @@ backend/node_modules
 backend/db.js
 backend/config.js
 
-backend/upload/*.*
+backend/upload/*.jpg
+backend/upload/*.jpeg
+backend/upload/*.png
+backend/upload/*.gif
+backend/upload/*.mp4
+backend/upload/*.mov
+
 backend/videos/*.*
 
 
