@@ -3,13 +3,30 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
+import ReactLoading from "react-loading";
+
 
 const Editor_home = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const [search, setsearch] = useState('');
+  const [loading, setLoading] = useState(false); // State to track loading
+
+  const initialSearch = localStorage.getItem('search') || '';
+
+  const [search, setsearch] = useState(initialSearch);
+  useEffect(() => {
+    // Save search state to localStorage whenever it changes
+    localStorage.setItem('search', search);
+  }, [search]);
   const [creator, setcreator] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
+
+  const [videotitle, setvideotitle] = useState('');
+  const [videodescription, setvideodescription] = useState('');
+  const [videoFile, setvideoFile] = useState(null);
+  const handlevideo = (e) => {
+    setvideoFile(e.target.files[0]);
+  };
 
   useEffect(() => {
     if (!token) {
@@ -36,11 +53,42 @@ const Editor_home = () => {
     }
   }
 
+  const sendvideo = async (event) => {
+    event.preventDefault();
+
+    setLoading(true); // Set loading to true when starting video upload
+
+
+
+    const videobjdata = new FormData();
+    videobjdata.append('token', token);
+    videobjdata.append('video', videoFile);
+    videobjdata.append('videodescription', videodescription);
+    videobjdata.append('videotitle', videotitle);
+    videobjdata.append('search', search);
+
+    const videoresponse = await axios.post('http://localhost:3000/api/v1/editor/sendvideo', videobjdata, {
+      headers: {
+        'Content-Type': 'multipart/form-data' // Important to set the content type for file uploads
+      }
+    })
+    console.log(videoresponse);
+    setLoading(false);
+
+
+    // Reload the page
+  }
+
   // console.log(creator);
-  console.log(imageUrl);
+  // console.log(imageUrl);
 
   const setsearchfun = (e) => setsearch(e.target.value)
 
+  if(loading){
+    return (
+      <LoadingComponent />
+    )
+  }
 
   return (
 
@@ -110,14 +158,120 @@ const Editor_home = () => {
         </div>
         <div className="col-span-2 ">
           <div className="flex flex-col gap-4">
-            <Popup trigger={<button className="inline-flex bg-gray-700 text-white items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 rounded-full">Add Video</button>} position="right center">
-              <div>this is popup</div>
+            <Popup
+              trigger={
+                <button className="inline-flex bg-gray-700 text-white items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 rounded-full">
+                  Add Video
+                </button>
+              }
+              modal
+              nested
+              position="right center"
+              closeOnDocumentClick // Add this prop to close the popup when clicking outside
+            >
+              {(close) => (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50" onClick={close}>
+                  <div className="relative w-96 mx-auto p-6 bg-gray-100 rounded-lg shadow-md" onClick={(e) => e.stopPropagation()}>
+                    {/* Stop propagation to prevent closing when clicking inside the popup */}
+                    <button onClick={close} className="absolute top-0 right-2 bg-transparent border-none outline-none text-gray-700 hover:text-green-600">
+                      <i className="fa fa-close"></i>
+                    </button>
+                    <h2 className="text-2xl font-semibold mb-4">Upload Your Video</h2>
+                  
+                    <form onSubmit={sendvideo} >
+                      <div className="mb-4">
+                        <label htmlFor="title" className="block text-gray-700 font-semibold mb-2">Title</label>
+                        <input onChange={(e) => {
+                          setTimeout(() => {
+                            setvideotitle(e.target.value);
+                          }, 3000); // Delay of 1000 milliseconds (1 second)
+                        }}
+                          type="text"
+                          id="title"
+                          className="w-full px-3 py-2 rounded-md border-gray-300 focus:outline-none focus:border-blue-500"
+                          placeholder="Enter title"
+                          required
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label htmlFor="description" className="block text-gray-700 font-semibold mb-2">Description</label>
+                        <textarea onChange={(e) => {
+                          setTimeout(() => {
+                            setvideodescription(e.target.value);
+                          }, 3000);
+                        }}
+                          id="description"
+                          className="w-full px-3 py-2 rounded-md border-gray-300 focus:outline-none focus:border-blue-500"
+                          placeholder="Enter description"
+                          rows="4"
+                          required
+                        ></textarea>
+                      </div>
+                      <div className="mb-4">
+                        <label htmlFor="video" className="block text-gray-700 font-semibold mb-2">Upload Video</label>
+                        <input
+                          type="file"
+                          // name="video"
+                          id="video"
+                          className="hidden"
+                          accept="video/*"
+                          onChange={handlevideo}
+                        />
+                        <label
+                          htmlFor="video"
+                          className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer transition duration-300"
+                        >
+                          Choose Video
+                        </label>
+                        <span className="ml-2" id="video-name">{videoFile ? videoFile.name : ""}</span>
+                      </div>
+                      <button
+                        type="submit"
+                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+                      >
+                        Submit
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
             </Popup>
+
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+
+
+function LoadingComponent(){
+  return (
+       <div>
+           <h2>Loading in ReactJs - GeeksforGeeks</h2>
+           <ReactLoading type="balls" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading type="bars" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading type="bubbles" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading type="cubes" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading type="cylon" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading type="spin" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading type="spokes" color="#0000FF"
+               height={100} width={50} />
+           <ReactLoading
+               type="spinningBubbles"
+               color="#0000FF"
+               height={100}
+               width={50}
+           />
+       </div>
+   );
 }
 
 
