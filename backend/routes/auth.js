@@ -118,6 +118,66 @@ router.post('/signup', upload.single('image'), async (req, res) => {
     }
 })
 
+const checklogininput = z.object({
+    email : z.string().email(),
+    password : z.string()
+})
+router.post('/login',async(req,res) =>{
+      try{
+        const {success} = checklogininput.safeParse(req.body);
+        if(success){
+
+            const email = req.body.email;
+            const inputpassword = req.body.password;
+    
+            const finduser = await users.findOne({
+                email 
+            })
+    
+            if(finduser){
+    
+                console.log(finduser.password);
+                if(finduser.password === inputpassword){
+    
+                    const username = finduser.name;
+                    const role = finduser.role;
+                    const image = finduser.image;
+                    
+                    let uniqueString = ""
+                    if(finduser.string){
+                         uniqueString = finduser.string;
+                    }
+                    const token = jwt.sign({
+                        username, email, role, image, uniqueString
+                    }, JWT_SECRET);
+    
+                    res.json({
+                        message: "User created successfully",
+                        role : role,
+                        token: token,
+                        string: uniqueString
+                    })
+    
+                }else{
+                    res.json({
+                        msg:"wrong details"
+                    })
+                }
+            }else{
+                res.json({msg:"no one is here"});
+            }
+        }else{
+            res.json({
+                msg:"enter valide inputs"
+            })
+        }
+
+
+      }catch(e){
+        console.log("login error :- " , e);
+      }
+})
+
 
 router.get('/', (req, res) => {
     fs.readFile('client_secret.json', (err, content) => {

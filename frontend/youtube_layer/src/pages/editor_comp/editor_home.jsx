@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import ReactLoading from "react-loading";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
+// toast.configure(); // Call toast.configure() to initialize
 
 const Editor_home = () => {
   const navigate = useNavigate();
@@ -12,7 +15,6 @@ const Editor_home = () => {
   const [loading, setLoading] = useState(false); // State to track loading
 
   const initialSearch = localStorage.getItem('search') || '';
-
   const [search, setsearch] = useState(initialSearch);
   useEffect(() => {
     // Save search state to localStorage whenever it changes
@@ -21,13 +23,20 @@ const Editor_home = () => {
   const [creator, setcreator] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
 
+  ///   code for handle popup
   const [videotitle, setvideotitle] = useState('');
   const [videodescription, setvideodescription] = useState('');
+  const[thumbnailFile,setThumbnailFile]=useState(null)
   const [videoFile, setvideoFile] = useState(null);
   const handlevideo = (e) => {
     setvideoFile(e.target.files[0]);
   };
+  const handleThumbnail = (e) => {
+    const file = e.target.files[0];
+    setThumbnailFile(file);
+  };
 
+  //    end handle popup
   useEffect(() => {
     if (!token) {
       navigate('/signup')
@@ -55,33 +64,34 @@ const Editor_home = () => {
 
   const sendvideo = async (event) => {
     event.preventDefault();
+    setLoading(true);
 
-    setLoading(true); // Set loading to true when starting video upload
+    const videObjData = new FormData();
+    videObjData.append('token', token);
+    videObjData.append('video', videoFile);
+    videObjData.append('thumbnail', thumbnailFile);
+    videObjData.append('videodescription', videodescription);
+    videObjData.append('videotitle', videotitle);
+    videObjData.append('search', search);
 
-
-
-    const videobjdata = new FormData();
-    videobjdata.append('token', token);
-    videobjdata.append('video', videoFile);
-    videobjdata.append('videodescription', videodescription);
-    videobjdata.append('videotitle', videotitle);
-    videobjdata.append('search', search);
-
-    const videoresponse = await axios.post('http://localhost:3000/api/v1/editor/sendvideo', videobjdata, {
-      headers: {
-        'Content-Type': 'multipart/form-data' // Important to set the content type for file uploads
+    try {
+      const videoResponse = await axios.post('http://localhost:3000/api/v1/editor/sendvideo', videObjData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(videoResponse.data);
+      setLoading(false);
+      if (videoResponse.data.success) {
+        console.log("hah success");
+        
       }
-    })
-    console.log(videoresponse);
-    setLoading(false);
-
-
-    // Reload the page
-  }
-
-  // console.log(creator);
-  // console.log(imageUrl);
-
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      setLoading(false);
+    }
+  };
+  
   const setsearchfun = (e) => setsearch(e.target.value)
 
   if(loading){
@@ -99,7 +109,7 @@ const Editor_home = () => {
           <button type="submit" className="inline-flex bg-gray-700 text-white items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 rounded-full">Search</button>
         </header>
       </form>
-
+      <ToastContainer/>
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-2 bg-gray-700 text-white">
           <div className="flex flex-col items-center gap-4 p-4">
@@ -208,6 +218,23 @@ const Editor_home = () => {
                         ></textarea>
                       </div>
                       <div className="mb-4">
+  <label htmlFor="thumbnail" className="block text-gray-700 font-semibold mb-2">Upload Thumbnail</label>
+  <input
+    type="file"
+    id="thumbnail"
+    className="hidden"
+    accept="image/*"
+    onChange={handleThumbnail}
+  />
+  <label
+    htmlFor="thumbnail"
+    className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer transition duration-300"
+  >
+    Choose Thumbnail
+  </label>
+  <span className="ml-2" id="thumbnail-name">{thumbnailFile ? thumbnailFile.name : ""}</span>
+</div>
+                      <div className="mb-4">
                         <label htmlFor="video" className="block text-gray-700 font-semibold mb-2">Upload Video</label>
                         <input
                           type="file"
@@ -274,5 +301,6 @@ function LoadingComponent(){
    );
 }
 
+// const notify = () => toast("Wow so easy!");
 
 export default Editor_home;

@@ -2,24 +2,25 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import Sidebar from '../../components/creatorsidebar';
 
 const Home = () => {
-  const [textToCopy, setTextToCopy] = useState(''); // The text you want to copy
-  const [copyStatus, setCopyStatus] = useState(false); // To indicate if the text was copied
+  // const [textToCopy, setTextToCopy] = useState(''); // The text you want to copy
+  // const [copyStatus, setCopyStatus] = useState(false); // To indicate if the text was copied
   const [videos, setVideos] = useState([]);
-  const [channels, setChannels] = useState([]);
+  // const [channels, setChannels] = useState([]);
   const navigate = useNavigate();
 
-  const onCopyHandler = (text, result) => {
-    if (result) {
-      setCopyStatus(true);
-      setTimeout(() => setCopyStatus(false), 2500);
-    } else {
-      // Handle the error scenario
-      alert('Failed to copy text. Please try again.');
-    }
-  };
-  const string = localStorage.getItem('string');
+  // const onCopyHandler = (text, result) => {
+  //   if (result) {
+  //     setCopyStatus(true);
+  //     setTimeout(() => setCopyStatus(false), 2500);
+  //   } else {
+  //     // Handle the error scenario
+  //     alert('Failed to copy text. Please try again.');
+  //   }
+  // };
+  // const string = localStorage.getItem('string');
 
   useEffect(() => {
     const youtubekey = localStorage.getItem('youtubekey');
@@ -32,18 +33,10 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const [videosResponse, channelsResponse] = await Promise.all([
-          axios.get('http://localhost:3000/api/v1/creator/video', { headers }),
-          axios.get('http://localhost:3000/api/v1/creator/info', { headers })
+          axios.get('http://localhost:3000/api/v1/creator/video', { headers })
         ]);
-        if (channelsResponse.data.msg === "token is not set" || videosResponse.data.msg === "token is not set") {
-          navigate('/signup');
-        }
-
-        if (channelsResponse.data.msg === "youtube token is not set" || videosResponse.data.msg === "youtube token is not set") {
-          window.location.href = "http://localhost:3000/api/v1/auth";
-        }
+        
         setVideos(videosResponse.data.videos);
-        setChannels(channelsResponse.data.channels);
 
 
       } catch (error) {
@@ -60,9 +53,10 @@ const Home = () => {
 
   return (
     <div className="App">
-      {channels && videos ? ( // Check if channels and videos exist
+      { videos ? ( // Check if channels and videos exist
         <div className="flex">
-          <aside className="w-64 h-screen bg-gray-800 p-4">
+          <Sidebar/>
+          {/* <aside className="w-64 h-screen bg-gray-800 p-4">
             {channels.map(channel => (
               <div key={channel.id} className="flex flex-col items-center">
                 <img
@@ -94,7 +88,12 @@ const Home = () => {
             </CopyToClipboard>
             {copyStatus && <p className='text-gray-400'>Text copied to clipboard!</p>}
 
-          </aside>
+            <button className="w-full bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white font-bold py-2 px-4 rounded-md shadow-md hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 transition duration-300 mt-4">
+  Edited Videos
+</button>
+
+
+          </aside> */}
           <main className="flex-1">
             <div className="grid grid-cols-4 gap-4 p-4">
               {videos.map((video, index) => (

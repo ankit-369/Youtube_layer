@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router()
 const fs = require('fs');
+const { users, videos } = require('../db')
 const { google } = require('googleapis');
 // const OAuth2 = google.auth.OAuth2;
+const path = require('path');
 const { authorize , authMiddleware} = require("./functions");
 
 var cors = require('cors')
@@ -139,6 +141,50 @@ function listUploadedVideos(auth, req,res) {
 }
 
 
+router.post('/edited_video',async (req, res) => {
+
+    const creatorstring = req.body.string;
+console.log(creatorstring);
+    const allvideos = await videos.find({
+        creator_string : creatorstring
+    }).select('-_id  -__v')
+
+    console.log(allvideos)
+
+
+    res.json({
+        videodata : allvideos
+    })
+
+});
+
+router.get('/thumbnails/:thumbnails', (req, res) => {
+    try {
+      const imageName = req.params.thumbnails;
+      const imagePath = path.join(__dirname, '..', '/thumbnails', imageName); // Adjust the path as per your setup
+  
+      // Send the image file as a response
+      console.log(imagePath)
+      res.sendFile(imagePath);
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+router.get('/video/:videoname', (req, res) => {
+    try {
+      const videoname = req.params.videoname.toString(); // Corrected parameter name
+      const videoPath = path.join(__dirname, '..', '/videos', videoname); // Adjust the path as per your setup
+  
+      // Send the video file as a response
+      console.log(videoPath);
+      res.sendFile(videoPath);
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 // const PORT = 3000;
 // app.listen(PORT, () => {
