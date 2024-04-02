@@ -11,15 +11,15 @@ backend/db.js
 backend/config.js
 
 
-backend/thumbnails/*.*
+backend/thumbnails/*
 
 
 
-backend/upload/*.*
+backend/upload/*
 
 
 
-backend/videos/*.*
+backend/videos/*
 
 
 

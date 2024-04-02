@@ -9,7 +9,9 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require("../config");
 
 
-const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
+// const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.upload'];
+
 const TOKEN_PATH = '../client_oauth_token.json';
 
 function authMiddleware(req, res, next) {
