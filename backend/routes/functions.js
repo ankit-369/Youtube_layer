@@ -55,6 +55,26 @@ function authorizesec(credentials, code,res) {
     });
 }
 
+function decodetoken(tokenstring){
+    if( typeof tokenstring === 'string'){
+        const newtokenstring = tokenstring.split(' ');
+
+        const newtoken = newtokenstring[1];
+
+        try {
+            const decoded = jwt.verify(newtoken, JWT_SECRET);
+            // console.log("this is decoded ", decoded);
+            return decoded.email;
+        } catch (err) {
+            console.error("Invalid token:", err);
+            return { error: "invalid token" };
+        }
+
+    }else{
+        return "not a string token";
+    }
+
+}
 
 function authorize(credentials, res,authHeader = null, callback) {
     try {
@@ -133,4 +153,4 @@ function getNewToken(oauth2Client, res) {
     res.redirect(authUrl);
 }
 
-module.exports = { authorize ,authorizesec,getNewToken,storeToken ,authMiddleware};
+module.exports = { authorize ,authorizesec,getNewToken,storeToken ,authMiddleware,decodetoken};

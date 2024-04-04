@@ -310,19 +310,39 @@ async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFi
                 body: videoFile
             }
         };
+        const stats = fs.statSync(videoFilePath);
+        const fileSizeInBytes = stats.size;
+        
+        console.log('File size:', fileSizeInBytes, 'bytes');
+        // // Upload video with progress tracking
+        // const response = await youtube.videos.insert(uploadParams, {
+        //     onUploadProgress: evt => {
+        //         if (evt.bytesRead) {
+        //             const progress = (evt.bytesRead / totalBytes) * 100;
+        //             console.log(`Upload Progress: ${progress.toFixed(2)}%`);
+        //             // console.log(`Bytes Uploaded: ${evt.bytesRead}`);
+        //         } else {
+        //             console.log('No bytes uploaded yet.');
+        //         }
+        //     }
+        // });
+        let totalBytesUploaded = 0;
 
-        // Upload video
-        const response = await youtube.videos.insert(uploadParams, {
-            onUploadProgress: evt => {
-                if (evt.totalBytes) {
-                    const progress = (evt.bytesRead / evt.totalBytes) * 100;
-                    console.log(`Upload Progress: ${progress.toFixed(2)}%`);
-                } else {
-                    console.log('Total bytes information not available. Cannot calculate progress.');
-                }
-            }
-        });
+// Upload video with progress tracking
+const response = await youtube.videos.insert(uploadParams, {
+    onUploadProgress: evt => {
+        if (evt.bytesRead) {
+            totalBytesUploaded += evt.bytesRead;
+            const percentage = (totalBytesUploaded / fileSizeInBytes) * 100;
+            const progressPercentage = Math.min(percentage, 100); // Cap progress at 100%
 
+            console.log(`Upload Progress: ${progressPercentage.toFixed(2)}%`);
+        } else {
+            console.log('No bytes uploaded yet.');
+        }
+    }
+});
+        
         console.log('Video uploaded:', response.data);
         res.json({ msg: "video uploaded" });
         // return response.data.id; // Return the ID of the uploaded video

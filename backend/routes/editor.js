@@ -7,6 +7,7 @@ const { users, videos } = require('../db')
 const { JWT_SECRET } = require("../config");
 const app = express();
 const jwt = require('jsonwebtoken');
+const { decodetoken, authMiddleware } = require("./functions");
 
 app.use(cors());
 app.use(express.json());
@@ -14,32 +15,54 @@ const z = require('zod')
 const { v4: uuidv4 } = require('uuid');
 
 
-const mystring = z.string();
 
+
+const checkdetails = z.object({
+  string: z.string(),
+  token: z.string()
+});
 
 router.post('/creatordata', async (req, res) => {
+  const { success, error } = checkdetails.safeParse(req.body);
 
-  const string = mystring.parse(req.body.string);
+  if (success) {
+    const { string, token } = req.body;
+    const creator = await users.findOne({ string });
+
+    if (creator) {
+      const creatordata = {
+        name: creator.name,
+        email: creator.email,
+        image: creator.image
+      };
+
+      // console.log(token);
+      const selfdata = decodetoken(token);
+
+      // console.log(selfdata);
+      const sendedvideo = await videos.find({
+        editor_email : selfdata
+      }).select('-_id  -__v')
+// console.log(sendedvideo);
+      res.json({ creatordata , sendedvideo});
+
+    } else {
+      res.json({ creatordata: "No creator found" });
+    }
 
 
-  const creator = await users.findOne({
-    string
-  })
 
-  const creatordata = {
-    name: creator.name,
-    email: creator.email,
-    image: creator.image
+  } else {
+    console.log(error);
+    res.json({ creatordata: "Invalid request body" });
   }
-
-
-  res.json({
-    creatordata
-  })
-
-
-
 });
+
+
+
+
+
+
 
 router.get('/image/:imageName', (req, res) => {
   try {
@@ -55,6 +78,7 @@ router.get('/image/:imageName', (req, res) => {
 });
 
 
+//   Send video to user
 const videoFileSchema = z.object({
   type: z.string().refine((type) => {
     const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime'];
@@ -71,31 +95,7 @@ const imageFileSchema = z.object({
     message: 'Invalid file format. Please upload a valid image file (JPEG, PNG, or GIF).'
   }),
 });
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, path.join(__dirname, '../videos')); // Specify the directory where uploaded files will be stored
-//   },
-//   filename: async function (req, file, cb) {
-//     try {
-//       // Validate file type
-//       const { type } = videoFileSchema.parse({ type: file.mimetype });
 
-//       // Generate unique filename
-//       const uniqueString = uuidv4();
-//       const nospace = file.originalname.replace(/\s+/g, '');
-//       const video = `${uniqueString}-${nospace}`;
-
-//       // Call the callback with the filename
-//       cb(null, video);
-//     } catch (error) {
-//       // Handle error properly
-//       console.error('Error handling file:', error);
-//       cb(error); // Pass the error to Multer
-//     }
-//   }
-// });
-
-// const upload = multer({ storage: storage });
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     if (file.fieldname === 'video') {
