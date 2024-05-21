@@ -7,18 +7,34 @@ const z = require("zod");
 const path = require('path');
 const { authorize, authMiddleware } = require("./functions");
 
+
 var cors = require('cors')
+const bodyParser = require('body-parser');
 
 const app = express();
+
+
+
+
+const morgan = require('morgan');
+app.use(morgan('dev'));
+
+
 app.use(cors({
     origin: 'http://localhost:5173',
-    // Other CORS options...
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization','Anothertoken']
 }));
 app.use(express.json());
+// Handle preflight requests
+app.options('/api/v1/creator/upload_video', cors());
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
+global.channelid="" ;
 
-router.get('/info', (req, res) => {
+router.get('/info', authMiddleware, (req, res) => {
     const AnotherToken = req.headers['anothertoken'];
     const authHeader = req.headers['authorization'];
 
@@ -45,7 +61,6 @@ router.get('/info', (req, res) => {
         });
     });
 });
-
 function getChannel(auth, req, res) {
     const service = google.youtube('v3');
     service.channels.list({
@@ -69,13 +84,14 @@ function getChannel(auth, req, res) {
             channels[0].id,
             channels[0].snippet.title,
             channels[0].statistics.viewCount);
-        console.log("Thumbnail: " + channels[0].snippet.thumbnails.default.url);
-
-
-        // Get the uploads playlist ID from the content details
-        const uploadsPlaylistId = channels[0].contentDetails.relatedPlaylists.uploads;
-        console.log('Uploads Playlist ID:', uploadsPlaylistId);
-
+            console.log("Thumbnail: " + channels[0].snippet.thumbnails.default.url);
+            
+            // Get the uploads playlist ID from the content details
+            const uploadsPlaylistId = channels[0].contentDetails.relatedPlaylists.uploads;
+            console.log('Uploads Playlist ID:', uploadsPlaylistId);
+            
+            global.channelid = uploadsPlaylistId;
+            console.log("\n\nthis is channel id again :-",global.channelid);
 
         res.json({ channels: channels });
     });
@@ -83,7 +99,7 @@ function getChannel(auth, req, res) {
 
 
 
-router.get('/video', (req, res) => {
+router.get('/video', authMiddleware, (req, res) => {
     const AnotherToken = req.headers['anothertoken'];
     const authHeader = req.headers['authorization'];
 
@@ -108,12 +124,17 @@ router.get('/video', (req, res) => {
         });
     });
 });
+
 function listUploadedVideos(auth, req, res) {
     const service = google.youtube('v3');
+    console.log(" \n\n\n\n\nchannal id in list of videos :-",global.channelid);
+    console.log("\n\n\n\n")
     service.playlistItems.list({
         auth: auth,
         part: 'snippet',
-        playlistId: 'UUHPJBySDBJe0E4J5FagpBSg', // Replace with your uploads playlist ID
+        playlistId: global.channelid, // Replace with your uploads playlist ID
+
+        // playlistId: 'UUHPJBySDBJe0E4J5FagpBSg', // Replace with your uploads playlist ID
         maxResults: 10, // Maximum number of videos to retrieve
     }, (err, response) => {
         if (err) {
@@ -127,11 +148,12 @@ function listUploadedVideos(auth, req, res) {
             res.status(404).send('No videos found');
             return;
         }
-
+        console.log("this is videos ", videos);
         const videoData = videos.map(video => ({
             title: video.snippet.title,
             thumbnail: video.snippet.thumbnails.default.url,
             publishedAt: video.snippet.publishedAt,
+            desription: video.snippet.description,
             videoUrl: `https://www.youtube.com/watch?v=${video.snippet.resourceId.videoId}`
         }));
 
@@ -141,7 +163,22 @@ function listUploadedVideos(auth, req, res) {
 }
 
 
-router.post('/edited_video', async (req, res) => {
+router.post('/edited_video', authMiddleware, async (req, res) => {
+
+    const AnotherToken = req.headers['anothertoken'];
+    const authHeader = req.headers['authorization'];
+
+    console.log('\n\nanothertokrn :-', AnotherToken);
+    console.log('\n\nauthtoken :-', authHeader);
+    if (AnotherToken == "null") {
+        console.log("redirected to signup")
+
+        return res.json({ msg: "token is not set" });
+    }
+    if (authHeader === "Bearer null") {
+        return res.json({ msg: "youtube token is not set" });
+
+    }
 
     const creatorstring = req.body.string;
     console.log(creatorstring);
@@ -189,187 +226,271 @@ router.get('/video/:videoname', (req, res) => {
 const checkvideodetails = z.object({
     description: z.string(),
     id: z.string()
-})
-router.post('/upload_video', async (req, res) => {
-
-    try {
-
-
-        const { success, error } = checkvideodetails.safeParse(req.body.body);
-
-        if (success) {
-
-            const video_id = req.body.body.id;
-            const updated_description = req.body.body.description;
-            console.log(updated_description);
-
-            let videodata;
-            videodata = await videos.find({
-                _id: video_id
-            }).select('  -__v')
-
-            const dbdescription = videodata[0].video_description;
-
-            const compareValue1 = updated_description.localeCompare(dbdescription);
-
-            if (compareValue1 !== 0) {
-                console.log("changed");
-                const filter = { _id: video_id };
-                const update = { video_description: updated_description };
-
-                // `doc` is the document _before_ `update` was applied
-                let doc = await videos.findOneAndUpdate(filter, update);
-
-                videodata = await videos.find({
-                    _id: video_id
-                }).select('  -__v')
-
-                console.log("updated successfull");
-
-            }
-            const videoTitle = videodata[0].video_title;
-            const videoDescription = videodata[0].video_description;
-
-            const thumbnailfilename = videodata[0].thumbnail_name;
-            const thumbnailFilePath = path.join(__dirname, '..', 'thumbnails', thumbnailfilename);
-
-            const videoFileName = videodata[0].video_name; // Assuming this contains the video file name
-            const videoFilePath = path.join(__dirname, '..', 'videos', videoFileName);
-            // res.json({ msg: videodata })
-            const AnotherToken = req.headers['anothertoken'];
-            const authHeader = req.headers['authorization'];
-
-            // console.log('\n\nanothertokrn :-', AnotherToken);
-            // console.log('\n\nauthtoken :-', authHeader);
-
-            if (AnotherToken == "null") {
-                console.log("redirected to signup")
-                return res.json({ msg: "token is not set" });
-            }
-            if (authHeader === "Bearer null") {
-                return res.json({ msg: "youtube token is not set" });
-
-            }
-            fs.readFile('client_secret.json', (err, content) => {
-                if (err) {
-                    console.log('Error loading client secret file: ' + err);
-                    return;
-                }
-                authorize(JSON.parse(content), res, authHeader, (oauth2Client) => {
-                    uploadVideo(oauth2Client, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath);
-                });
-            });
-
-
-        } else {
-            res.json({ msg: error });
-        }
-    } catch (e) {
-        console.log("this is error in upload  ", e);
-    }
-})
-
-
-
-// Function to upload a video to YouTube
-async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath) {
-    const youtube = google.youtube({ version: 'v3', auth });
-
-    console.log("video" , videoFilePath);
-    console.log("thumbnail " , thumbnailFilePath);
-
-    try {
-        // Read video and thumbnail files
-        const videoFile = fs.createReadStream(videoFilePath);
-        // const thumbnailFile = fs.createReadStream(thumbnailFilePath);
-        // const thumbnailData = fs.readFileSync(thumbnailFilePath);
-        // const thumbnailBase64 = Buffer.from(thumbnailData).toString('base64');
-        // const thumbnailUrl = `data:image/png;base64,${thumbnailBase64}`;
-        const thumbnailUrl = encodeThumbnailToBase64(thumbnailFilePath);
-
-        // Upload parameters
-        const uploadParams = {
-            part: 'snippet,status',
-            requestBody: {
-                snippet: {
-                    title: videoTitle,
-                    description: videoDescription,
-                    thumbnails: {
-                        default: {
-                            url: thumbnailUrl // Set the thumbnail URL
-                        }
-                    }
-                },
-                status: {
-                    privacyStatus: 'private' ,// Change privacy status as needed
-                    selfDeclaredMadeForKids: true
-
-                }
-            },
-            media: {
-                body: videoFile
-            }
-        };
-        const stats = fs.statSync(videoFilePath);
-        const fileSizeInBytes = stats.size;
-        
-        console.log('File size:', fileSizeInBytes, 'bytes');
-        // // Upload video with progress tracking
-        // const response = await youtube.videos.insert(uploadParams, {
-        //     onUploadProgress: evt => {
-        //         if (evt.bytesRead) {
-        //             const progress = (evt.bytesRead / totalBytes) * 100;
-        //             console.log(`Upload Progress: ${progress.toFixed(2)}%`);
-        //             // console.log(`Bytes Uploaded: ${evt.bytesRead}`);
-        //         } else {
-        //             console.log('No bytes uploaded yet.');
-        //         }
-        //     }
-        // });
-        let totalBytesUploaded = 0;
-
-// Upload video with progress tracking
-const response = await youtube.videos.insert(uploadParams, {
-    onUploadProgress: evt => {
-        if (evt.bytesRead) {
-            totalBytesUploaded += evt.bytesRead;
-            const percentage = (totalBytesUploaded / fileSizeInBytes) * 100;
-            const progressPercentage = Math.min(percentage, 100); // Cap progress at 100%
-
-            console.log(`Upload Progress: ${progressPercentage.toFixed(2)}%`);
-        } else {
-            console.log('No bytes uploaded yet.');
-        }
-    }
 });
+const uploadProgress = {}; // To store upload progress
+
+
+
+// router.post('/upload_video', authMiddleware, async (req, res) => {
+
+//     try {
+
+
+//         const { success, error } = checkvideodetails.safeParse(req.body.body);
+
+//         if (error) {
+//             console.log("inside error")
+//             res.json({ msg: error })
+//         }
+//         if (success) {
+
+//             const video_id = req.body.body.id;
+//             const updated_description = req.body.body.description;
+//             console.log(updated_description);
+
+//             let videodata;
+//             videodata = await videos.find({
+//                 _id: video_id
+//             }).select('  -__v')
+
+//             const dbdescription = videodata[0].video_description;
+
+//             const compareValue1 = updated_description.localeCompare(dbdescription);
+
+//             if (compareValue1 !== 0) {
+//                 console.log("changed");
+//                 const filter = { _id: video_id };
+//                 const update = { video_description: updated_description };
+
+//                 // `doc` is the document _before_ `update` was applied
+//                 let doc = await videos.findOneAndUpdate(filter, update);
+
+//                 videodata = await videos.find({
+//                     _id: video_id
+//                 }).select('  -__v')
+
+//                 console.log("updated successfull");
+
+//             }
+//             const videoTitle = videodata[0].video_title;
+//             const videoDescription = videodata[0].video_description;
+
+//             const thumbnailfilename = videodata[0].thumbnail_name;
+//             const thumbnailFilePath = path.join(__dirname, '..', 'thumbnails', thumbnailfilename);
+
+//             const videoFileName = videodata[0].video_name; // Assuming this contains the video file name
+//             const videoFilePath = path.join(__dirname, '..', 'videos', videoFileName);
+//             // res.json({ msg: videodata })
+//             const AnotherToken = req.headers['anothertoken'];
+//             const authHeader = req.headers['authorization'];
+
+//             // console.log('\n\nanothertokrn :-', AnotherToken);
+//             // console.log('\n\nauthtoken :-', authHeader);
+
+//             if (AnotherToken == "null") {
+//                 console.log("redirected to signup")
+//                 return res.json({ msg: "token is not set" });
+//             }
+//             if (authHeader === "Bearer null") {
+//                 return res.json({ msg: "youtube token is not set" });
+
+//             }
+
+//             console.log("\n\ndescripting changes \n\n");
+//             fs.readFile('client_secret.json', (err, content) => {
+//                 if (err) {
+//                     console.log('Error loading client secret file: ' + err);
+//                     return;
+//                 }
+//                 authorize(JSON.parse(content), res, authHeader, (oauth2Client) => {
+//                     uploadVideo(oauth2Client, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath);
+//                 });
+//             });
+
+
+//         }
+//     } catch (e) {
+//         console.log("this is error in upload  ", e);
+//     }
+// })
+
+
+
+
+
+// // Function to upload a video to YouTube
+
+// async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath) {
+//     const youtube = google.youtube({ version: 'v3', auth });
+//     try {
+//         const videoFile = fs.createReadStream(videoFilePath);
+//         const thumbnailUrl = encodeThumbnailToBase64(thumbnailFilePath);
+//         const uploadParams = {
+//             part: 'snippet,status',
+//             requestBody: {
+//                 snippet: {
+//                     title: videoTitle,
+//                     description: videoDescription
+//                 },
+//                 status: {
+//                     privacyStatus: 'private',
+//                     selfDeclaredMadeForKids: true
+//                 }
+//             },
+//             media: { body: videoFile }
+//         };
+//         const stats = fs.statSync(videoFilePath);
+//         const fileSizeInBytes = stats.size;
+//         console.log('File size:', fileSizeInBytes, 'bytes');
+//         let totalBytesUploaded = 0;
+
+//         const response = await youtube.videos.insert(uploadParams, {
+//             onUploadProgress: evt => {
+//                 if (evt.bytesRead) {
+//                     totalBytesUploaded += evt.bytesRead;
+//                     const progressPercentage = Math.min((totalBytesUploaded / fileSizeInBytes) * 100, 100);
+//                     console.log(`Upload Progress: ${progressPercentage.toFixed(2)}%`);
+//                     io.emit('uploadProgress', { progress: progressPercentage.toFixed(2) });
+//                 } else {
+//                     console.log('No bytes uploaded yet.');
+//                 }
+//             }
+//         });
+
+//         console.log('Video uploaded:', response.data);
+//         io.emit('uploadProgress', { progress: 100 });
+
         
-        console.log('Video uploaded:', response.data);
-        res.json({ msg: "video uploaded" });
-        // return response.data.id; // Return the ID of the uploaded video
-    } catch (error) {
-        console.error('Error uploading video:', error);
-        throw error; // Propagate the error
+//     } catch (error) {
+//         console.error('Error uploading video:', error);
+//         res.status(500).json({ error: "Error uploading video" });
+//     }
+// }
+router.post('/upload_video', authMiddleware, async (req, res) => {
+    try {
+      const { success, error } = checkvideodetails.safeParse(req.body.body);
+  
+      if (error) {
+        console.log("Validation error:", error);
+        return res.json({ msg: error });
+      }
+  
+      if (success) {
+        const video_id = req.body.body.id;
+        const updated_description = req.body.body.description;
+        console.log(updated_description);
+  
+        let videodata = await videos.find({ _id: video_id }).select('-__v');
+        const dbdescription = videodata[0].video_description;
+  
+        if (updated_description.localeCompare(dbdescription) !== 0) {
+          console.log("Description changed");
+          const filter = { _id: video_id };
+          const update = { video_description: updated_description };
+          await videos.findOneAndUpdate(filter, update);
+  
+          videodata = await videos.find({ _id: video_id }).select('-__v');
+          console.log("Update successful");
+        }
+  
+        const videoTitle = videodata[0].video_title;
+        const videoDescription = videodata[0].video_description;
+        const thumbnailfilename = videodata[0].thumbnail_name;
+        const thumbnailFilePath = path.join(__dirname, '..', 'thumbnails', thumbnailfilename);
+        const videoFileName = videodata[0].video_name;
+        const videoFilePath = path.join(__dirname, '..', 'videos', videoFileName);
+  
+        const AnotherToken = req.headers['anothertoken'];
+        const authHeader = req.headers['authorization'];
+  
+        if (AnotherToken == "null") {
+          console.log("Redirected to signup");
+          return res.json({ msg: "token is not set" });
+        }
+        if (authHeader === "Bearer null") {
+          return res.json({ msg: "youtube token is not set" });
+        }
+  
+        console.log("\n\nStarting video upload\n\n");
+        fs.readFile('client_secret.json', (err, content) => {
+          if (err) {
+            console.log('Error loading client secret file:', err);
+            return;
+          }
+          authorize(JSON.parse(content), res, authHeader, (oauth2Client) => {
+            uploadVideo(oauth2Client, req, res, video_id, videoTitle, videoDescription, videoFilePath, thumbnailFilePath);
+          });
+        });
+      }
+    } catch (e) {
+      console.log("Error in upload:", e);
     }
-}
-
-
-function getFileFormat(filePath) {
+  });
+  
+  // Function to upload a video to YouTube
+  async function uploadVideo(auth, req, res, videoId, videoTitle, videoDescription, videoFilePath, thumbnailFilePath) {
+    const youtube = google.youtube({ version: 'v3', auth });
+    try {
+      const videoFile = fs.createReadStream(videoFilePath);
+      const uploadParams = {
+        part: 'snippet,status',
+        requestBody: {
+          snippet: { title: videoTitle, description: videoDescription },
+          status: { privacyStatus: 'private', selfDeclaredMadeForKids: true }
+        },
+        media: { body: videoFile }
+      };
+  
+      const stats = fs.statSync(videoFilePath);
+      const fileSizeInBytes = stats.size;
+      console.log('File size:', fileSizeInBytes, 'bytes');
+      let totalBytesUploaded = 0;
+  
+      const response = await youtube.videos.insert(uploadParams, {
+        onUploadProgress: evt => {
+          if (evt.bytesRead) {
+            totalBytesUploaded += evt.bytesRead;
+            const progressPercentage = Math.min((totalBytesUploaded / fileSizeInBytes) * 100, 100);
+            console.log(`Upload Progress: ${progressPercentage.toFixed(2)}%`);
+            uploadProgress[videoId] = progressPercentage.toFixed(2);
+          } else {
+            console.log('No bytes uploaded yet.');
+          }
+        }
+      });
+  
+      console.log('Video uploaded:', response.data);
+      uploadProgress[videoId] = 100;
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      res.status(500).json({ error: "Error uploading video" });
+    }
+  }
+  
+  router.get('/upload_progress/:videoId', (req, res) => {
+    const { videoId } = req.params;
+    const progress = uploadProgress[videoId] || 0;
+    res.json({ progress });
+  });
+  
+  function getFileFormat(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     switch (ext) {
-        case '.jpeg':
-        case '.jpg':
-            return 'jpeg';
-        case '.png':
-            return 'png';
-        default:
-            throw new Error(`Unsupported file format: ${ext}`);
+      case '.jpeg':
+      case '.jpg':
+        return 'jpeg';
+      case '.png':
+        return 'png';
+      default:
+        throw new Error(`Unsupported file format: ${ext}`);
     }
-}
-
-function encodeThumbnailToBase64(thumbnailFilePath) {
+  }
+  
+  function encodeThumbnailToBase64(thumbnailFilePath) {
     const thumbnailData = fs.readFileSync(thumbnailFilePath);
     const thumbnailBase64 = Buffer.from(thumbnailData).toString('base64');
     const fileFormat = getFileFormat(thumbnailFilePath);
     return `data:image/${fileFormat};base64,${thumbnailBase64}`;
-}
+  }
+  
 module.exports = router;

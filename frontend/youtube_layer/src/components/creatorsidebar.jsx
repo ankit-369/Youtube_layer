@@ -13,13 +13,23 @@ const Sidebar = () => {
     const fetchData = async () => {
       const youtubekey = localStorage.getItem('youtubekey');
       const token = localStorage.getItem('token');
+      if(!token){
+        navigate('/login');
+      }
       const headers = {
         Authorization: `Bearer ${youtubekey}`,
         Anothertoken: `${token}`
       };
       try {
         const channelsResponse = await axios.get('http://localhost:3000/api/v1/creator/info', { headers });
+        console.log("Response msg:", channelsResponse.data.msg); // Add this line to inspect the response message
 
+        if (channelsResponse.data.msg === "wrong user token") {
+          console.log("inside msg haha");
+          // Redirect to login page if the token is wrong
+          navigate('/login');
+          return; // Exit the function to prevent further execution
+      }
         if (channelsResponse.data.msg === 'token is not set') {
           navigate('/login');
         }
@@ -46,6 +56,18 @@ const Sidebar = () => {
       alert('Failed to copy text. Please try again.');
     }
   };
+
+  // useEffect(()=>{
+
+    const handlelogout=()=>{
+      localStorage.removeItem("token")
+      localStorage.removeItem("youtubekey")
+      localStorage.removeItem("string")
+      window.location.reload(); // Reload the page
+
+  
+    }
+  // })
 
   return (
     <aside className="w-64 h-screen bg-gray-800 p-4">
@@ -81,6 +103,14 @@ const Sidebar = () => {
 
       <button onClick={()=>{navigate('/edited_videos')}} className="w-full bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white font-bold py-2 px-4 rounded-md shadow-md hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 transition duration-300 mt-4">
         Edited Videos
+      </button>
+
+      <button onClick={()=>{navigate('/home')}} className="w-full bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white font-bold py-2 px-4 rounded-md shadow-md hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 transition duration-300 mt-4">
+        Home
+      </button>
+
+      <button onClick={handlelogout} className="w-full bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white font-bold py-2 px-4 rounded-md shadow-md hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 transition duration-300 mt-4">
+        logout
       </button>
     </aside>
   );

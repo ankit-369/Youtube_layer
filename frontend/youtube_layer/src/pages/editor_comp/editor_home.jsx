@@ -40,7 +40,7 @@ const Editor_home = () => {
   //    end handle popup
   useEffect(() => {
     if (!token) {
-      navigate('/signup')
+      navigate('/login')
     }
   }, [token]);
 ///////////////////

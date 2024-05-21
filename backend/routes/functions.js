@@ -5,6 +5,8 @@ const {creator,editor} = require('../db')
 const { google } = require('googleapis');
 const OAuth2 = google.auth.OAuth2;
 // var cors = require('cors')
+const { users } = require('../db')
+
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require("../config");
 
@@ -14,29 +16,71 @@ const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www
 
 const TOKEN_PATH = '../client_oauth_token.json';
 
-function authMiddleware(req, res, next) {
-    const userheader = req.headers.authorization;
+// function authMiddleware(req, res, next) {
+//     // const AnotherToken = req.headers['anothertoken'];
 
-    if (!userheader || !userheader.startsWith('Bearer ')) 
-    {return res.status(401).json({
-        msg:"you ere wrong"
-    });
+//     const userheader = req.headers['anothertoken'];
+
+//     if (!userheader || !userheader.startsWith('Bearer ')) 
+//     {return res.status(401).json({
+//         msg:"token formate is wrong"
+//     });
+//     }
+
+//     const token = userheader.split(' ')[1];
+//     jwt.verify(token, JWT_SECRET, async (err, authData) => {
+//         if (err)
+//             res.status(403).json({error:err});
+//         else {
+//             if (authData && authData.email) {
+//                 const email = authData.email;
+//                 const finduser = await users.findOne({
+//                     email 
+//                 })
+//                 if(finduser){
+
+//                     req.userId = authData.userId;
+//                     next();
+//                 }else{
+//                     res.json({msg : "error in middleware"});
+//                 }
+//             } else {
+//                 return res.status(403).json({ error: 'Forbidden' });
+//             }
+//         }
+//     })
+
+// }
+function authMiddleware(req, res, next) {
+    const userheader = req.headers['anothertoken']; // Make sure this matches the key in your headers object
+    console.log("this is meddleware " ,userheader);
+    if (!userheader || !userheader.startsWith('Bearer ')) {
+        return res.status(400).json({
+            msg: "Token format is wrong"
+        });
     }
 
-    const token = userheader.split(' ')[1];
-    jwt.verify(token, JWT_SECRET, (err, authData) => {
-        if (err)
-            res.status(403).json({error:err});
-        else {
-            if (authData && authData.userId) {
-                req.userId = authData.userId;
-                next();
+    const usertoken = userheader.split(' ')[1];
+    jwt.verify(usertoken, JWT_SECRET, async (err, authData) => {
+        if (err) {
+            // wrong user token
+            res.json({ msg : "wrong user token"});
+        } else {
+            if (authData && authData.email) {
+                const email = authData.email;
+                const finduser = await users.findOne({ email });
+                if (finduser) {
+                    // req.userId = authData.userId;
+                    console.log("auth successsfull yeeeeee")
+                    next();
+                } else {
+                    res.status(403).json({ msg: "Error in middleware" });
+                }
             } else {
-                return res.status(403).json({ error: 'Forbidden' });
+                res.status(403).json({ error: 'Forbidden' });
             }
         }
-    })
-
+    });
 }
 
 function authorizesec(credentials, code,res) {

@@ -22,7 +22,7 @@ const Home = () => {
   // };
   // const string = localStorage.getItem('string');
 
-  
+
   useEffect(() => {
     const youtubekey = localStorage.getItem('youtubekey');
     const token = localStorage.getItem('token');
@@ -36,7 +36,11 @@ const Home = () => {
         const [videosResponse, channelsResponse] = await Promise.all([
           axios.get('http://localhost:3000/api/v1/creator/video', { headers })
         ]);
-        
+
+      //   if(videosResponse.data.msg === 'wrong user token'){
+      //     console.log("inside msg haha");
+      //     navigate('/login');
+      // }
         setVideos(videosResponse.data.videos);
 
 
@@ -53,73 +57,38 @@ const Home = () => {
   };
 
   return (
-    <div className="App">
-      { videos ? ( // Check if channels and videos exist
+    <div className="App bg-gray-900 text-white min-h-screen">
+      {videos ? (
+        // Check if channels and videos exist
         <div className="flex">
-          <Sidebar/>
-          {/* <aside className="w-64 h-screen bg-gray-800 p-4">
-            {channels.map(channel => (
-              <div key={channel.id} className="flex flex-col items-center">
-                <img
-                  alt="Profile image"
-                  className="w-20 h-20 rounded-full"
-                  height="100"
-                  src={channel.snippet.thumbnails.default.url}
-                  style={{
-                    aspectRatio: "100/100",
-                    objectFit: "cover",
-                  }}
-                  width="100"
-                />
-                <span className="mt-2 text-white">{channel.snippet.title}</span>
-                <p className="text-gray-400 text-xs mt-1">{channel.snippet.description}</p>
-                <div className="text-gray-400 text-xs mt-1">
-                  <p>Subscribers: {channel.statistics.subscriberCount}</p>
-                  <p>Videos: {channel.statistics.videoCount}</p>
-                </div>
-              </div>
-            ))}
-            <textarea className='bg-gray-800 text-white pt-10'
-              value={string}
-              onChange={(e) => setTextToCopy(e.target.value)}
-              placeholder="Type or paste text here..."
-            />
-            <CopyToClipboard text={string} onCopy={onCopyHandler}>
-              <button className='text-gray-400'>Copy to Clipboard</button>
-            </CopyToClipboard>
-            {copyStatus && <p className='text-gray-400'>Text copied to clipboard!</p>}
-
-            <button className="w-full bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white font-bold py-2 px-4 rounded-md shadow-md hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 transition duration-300 mt-4">
-  Edited Videos
-</button>
-
-
-          </aside> */}
-          <main className="flex-1">
-            <div className="grid grid-cols-4 gap-4 p-4">
+          <Sidebar />
+          <div className="container mx-auto ml-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {videos.map((video, index) => (
-                <div className="col-span-1" key={index}>
+                <div
+                  key={index}
+                  className="bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 cursor-pointer"
+                  onClick={() => window.open(video.videoUrl, '_blank')}
+                >
                   <img
-                    onClick={() => window.open(video.videoUrl, '_blank')}
                     alt="Video thumbnail"
-                    className="w-full h-auto cursor-pointer"
-                    height="200"
+                    className="w-full h-48 object-cover rounded-t-lg"
                     src={video.thumbnail}
-                    style={{
-                      aspectRatio: "200/200",
-                      objectFit: "cover",
-                    }}
-                    width="200"
+                    
                   />
-                  <h3 className="mt-2 font-bold">{video.title}</h3>
-                  <p>{video.description}</p>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
+                    <p className="text-gray-400 line-clamp-2">{video.desription}</p>
+                  </div>
                 </div>
               ))}
             </div>
-          </main>
+          </div>
         </div>
       ) : (
-        <p>Loading...</p> // Render a loading indicator while waiting for data
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-600"></div>
+        </div>
       )}
     </div>
   );
