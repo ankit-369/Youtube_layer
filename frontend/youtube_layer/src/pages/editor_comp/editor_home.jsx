@@ -5,6 +5,8 @@ import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import ReactLoading from "react-loading";
 import { ToastContainer, toast } from 'react-toastify';
+// import styled, { keyframes } from 'styled-components';
+
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -459,30 +461,48 @@ const VideoPage = ({ videoId, title, description, videoUrl, onClose }) => {
   );
 };
 
+// function LoadingComponent() {
+//   return (
+//     <div>
+//       <h2>Loading in ReactJs - GeeksforGeeks</h2>
+//       <ReactLoading type="balls" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading type="bars" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading type="bubbles" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading type="cubes" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading type="cylon" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading type="spin" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading type="spokes" color="#0000FF"
+//         height={100} width={50} />
+//       <ReactLoading
+//         type="spinningBubbles"
+//         color="#0000FF"
+//         height={100}
+//         width={50}
+//       />
+//     </div>
+//   );
+// }
+
 function LoadingComponent() {
   return (
-    <div>
-      <h2>Loading in ReactJs - GeeksforGeeks</h2>
-      <ReactLoading type="balls" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading type="bars" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading type="bubbles" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading type="cubes" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading type="cylon" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading type="spin" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading type="spokes" color="#0000FF"
-        height={100} width={50} />
-      <ReactLoading
-        type="spinningBubbles"
-        color="#0000FF"
-        height={100}
-        width={50}
-      />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="animate-spin rounded-full border-t-4 border-indigo-500 border-opacity-50 h-20 w-20"></div>
+        </div>
+        <div className="flex items-center justify-center space-x-4">
+          <div className="animate-bounce rounded-full bg-indigo-500 h-4 w-4"></div>
+          <div className="animate-bounce rounded-full bg-indigo-500 h-4 w-4 delay-200"></div>
+          <div className="animate-bounce rounded-full bg-indigo-500 h-4 w-4 delay-400"></div>
+        </div>
+      </div>
+      <h2 className="mt-8 text-3xl font-bold text-indigo-500">Loading...</h2>
     </div>
   );
 }
