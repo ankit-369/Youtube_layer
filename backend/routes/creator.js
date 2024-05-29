@@ -364,7 +364,7 @@ async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFi
 
         console.log('Video uploaded:', response.data);
 
-
+/*
         // Delete the video file after upload is complete
         fs.unlink(videoFilePath, (err) => {
             if (err) {
@@ -384,6 +384,8 @@ async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFi
         });
 
         const result = await videos.findByIdAndDelete(video_id);
+
+*/
 
         if (!result) {
           console.log('No document found with the specified _id');

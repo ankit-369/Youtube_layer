@@ -37,10 +37,10 @@ const Home = () => {
           axios.get('http://localhost:3000/api/v1/creator/video', { headers })
         ]);
 
-      //   if(videosResponse.data.msg === 'wrong user token'){
-      //     console.log("inside msg haha");
-      //     navigate('/login');
-      // }
+        if(videosResponse.data.msg === 'wrong user token'){
+          console.log("inside msg haha");
+          navigate('/login');
+      }
         setVideos(videosResponse.data.videos);
 
 
