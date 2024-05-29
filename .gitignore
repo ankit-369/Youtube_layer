@@ -13,7 +13,7 @@ backend/config.js
 
 backend/thumbnails/*
 
-
+backend/.env
 
 backend/upload/*
 
@@ -25,7 +25,5 @@ backend/videos/*
 
 
 
-# Ignore client_oauth_token.json (located outside of backend)
-client_oauth_token.json
 
 hha.html
