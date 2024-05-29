@@ -9,7 +9,6 @@ backend/node_modules
 
 backend/db.js
 backend/config.js
-backend/.env
 
 backend/thumbnails/*
 

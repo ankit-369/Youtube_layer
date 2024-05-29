@@ -1,7 +1,6 @@
-# Youtube Layer
+# Youtube_layer
 
-## Twitter
-[Twitter Profile](https://twitter.com/_x_ankit)
+#twitter :-  
+https://twitter.com/_x_ankit
 
-## Description
-This project serves as a layer between YouTube and the user. It allows editors to upload videos to a server where YouTubers can watch these videos, along with their titles and descriptions. The YouTuber can then upload the video directly to YouTube without needing to download it.
+this a layer between youtube and user wher he can see video sended by editor and push that in youtube without downloding that video.
