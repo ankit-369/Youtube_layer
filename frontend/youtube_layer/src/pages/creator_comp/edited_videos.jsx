@@ -124,6 +124,8 @@ const VideoPage = ({ videoId, title, description, videoUrl, onClose }) => {
           if(response.data.msg=="video is sended"){
             setLoading(false)
           }
+          window.location.reload();
+
           
         } catch (error) {
           console.error("Error uploading video:", error);

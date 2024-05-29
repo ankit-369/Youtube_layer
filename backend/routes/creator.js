@@ -308,7 +308,7 @@ router.post('/upload_video', authMiddleware, async (req, res) => {
                     return;
                 }
                 authorize(JSON.parse(content), res, authHeader, (oauth2Client) => {
-                    uploadVideo(oauth2Client, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath);
+                    uploadVideo(oauth2Client, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath,video_id);
                 });
             });
 
@@ -325,7 +325,7 @@ router.post('/upload_video', authMiddleware, async (req, res) => {
 
 // Function to upload a video to YouTube
 
-async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath) {
+async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFilePath, thumbnailFilePath,video_id) {
     const youtube = google.youtube({ version: 'v3', auth });
     try {
         const videoFile = fs.createReadStream(videoFilePath);
@@ -363,6 +363,34 @@ async function uploadVideo(auth, req, res, videoTitle, videoDescription, videoFi
         });
 
         console.log('Video uploaded:', response.data);
+
+
+        // Delete the video file after upload is complete
+        fs.unlink(videoFilePath, (err) => {
+            if (err) {
+                console.error(`Error deleting video file ${videoFilePath}:`, err);
+            } else {
+                console.log(`Deleted video file ${videoFilePath}`);
+            }
+        });
+
+         // Delete the thumbnail file after upload is complete
+         fs.unlink(thumbnailFilePath, (err) => {
+            if (err) {
+                console.error(`Error deleting thumbnail file ${thumbnailFilePath}:`, err);
+            } else {
+                console.log(`Deleted thumbnail file ${thumbnailFilePath}`);
+            }
+        });
+
+        const result = await videos.findByIdAndDelete(video_id);
+
+        if (!result) {
+          console.log('No document found with the specified _id');
+        } else {
+          console.log(`Document with _id ${video_id} deleted`);
+        }
+
         res.json({
           msg:"video is sended"
         })

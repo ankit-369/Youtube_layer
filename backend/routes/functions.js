@@ -1,10 +1,8 @@
-// const express = require('express');
-// const router = express.Router()
+
 const fs = require('fs');
 const {creator,editor} = require('../db')
 const { google } = require('googleapis');
 const OAuth2 = google.auth.OAuth2;
-// var cors = require('cors')
 const { users } = require('../db')
 
 const jwt = require('jsonwebtoken');
@@ -14,7 +12,7 @@ const { JWT_SECRET } = require("../config");
 // const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
 const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.upload'];
 
-const TOKEN_PATH = '../client_oauth_token.json';
+// const TOKEN_PATH = '../client_oauth_token.json';
 
 // function authMiddleware(req, res, next) {
 //     // const AnotherToken = req.headers['anothertoken'];
@@ -150,18 +148,7 @@ function authorize(credentials, res,authHeader = null, callback) {
 
             }
             
-            // Check if we have previously stored a token.
-        //     fs.readFile(TOKEN_PATH, (err, token) => {
-        //         if (err) {
-        //             getNewToken(oauth2Client, res);
-        //         } else {
-                    
-        //             console.log('\n\n main json :- ',JSON.parse(token));
-        //         oauth2Client.credentials = JSON.parse(token);
-        //         console.log('Token already exists.');
-        //         callback(oauth2Client);
-        //     }
-        // });
+          
     } catch (e) {
         console.log('Error in authorization: ' + e);
     }
@@ -172,17 +159,10 @@ function storeToken(token,res) {
         const tokenData = JSON.stringify({ token });
         const savedtoken = jwt.sign({ tokenData }, JWT_SECRET);
      
-//         fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-//             if (err) throw err;
-//             console.log('Token stored to ' + TOKEN_PATH);
-//         });
-//         console.log('this is token data :- ',tokenData);
-// console.log('\n\n\n\n\nthis is saved  token :- ', savedtoken);
         res.redirect(`http://localhost:5173/?token=${savedtoken}`);
-        // Return the redirect URL with the token as a query parameter
-        // return `http://localhost:5173/?token=${savedtoken}`;
+        
     } catch (e) {
-        console.log('Error storing the token: ' + e);
+        console.log('Error in storetoken function ' + e);
         return null; // Handle error appropriately in your code
     }
 }

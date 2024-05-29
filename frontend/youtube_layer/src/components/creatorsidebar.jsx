@@ -20,6 +20,8 @@ const Sidebar = () => {
         Authorization: `Bearer ${youtubekey}`,
         Anothertoken: `${token}`
       };
+      // https://final-youtube-layear.vercel.app/api/v1/creator/info
+      // http://localhost:3000/api/v1/creator/info
       try {
         const channelsResponse = await axios.get('http://localhost:3000/api/v1/creator/info', { headers });
         console.log("Response msg:", channelsResponse.data.msg); // Add this line to inspect the response message
