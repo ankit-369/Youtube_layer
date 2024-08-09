@@ -9,7 +9,7 @@ backend/node_modules
 
 backend/db.js
 backend/config.js
-
+backend/main.js
 
 backend/thumbnails/*
 
