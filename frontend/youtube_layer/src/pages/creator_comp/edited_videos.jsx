@@ -102,7 +102,8 @@ const VideoPage = ({ videoId, title, description, videoUrl, onClose }) => {
     setVideoid(videoId);
   }, [videoId, description]);
 
- 
+  const navigate = useNavigate();
+
 
   const [loading, setLoading] = useState(false); // State to track loading
   const handleUpload = async () => {
@@ -122,14 +123,16 @@ const VideoPage = ({ videoId, title, description, videoUrl, onClose }) => {
           // const response = await axios.post(url, { body },{ headers });
           console.log("Upload response:", response);
           if(response.data.msg=="video is sended"){
-            setLoading(false)
+            setLoading(false);
+            navigate('/home');
           }
-          window.location.reload();
+
 
           
         } catch (error) {
           console.error("Error uploading video:", error);
-          setLoading(false)
+          alert(error);
+          setLoading(false);
 
         }
 
@@ -147,7 +150,7 @@ const VideoPage = ({ videoId, title, description, videoUrl, onClose }) => {
       <div className="max-w-4xl mt-64 p-8 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl shadow-2xl flex flex-col relative">
         <button
           onClick={onClose}
-          className="absolute top-0 right-0 mt-4 px-3 text-white hover:text-gray-300 focus:outline-none transition-colors duration-300"
+          className="absolute top-96 right-0 mt-4 px-3 text-white hover:text-gray-300 focus:outline-none transition-colors duration-300"
         >
           <svg
             className="w-6 h-6"

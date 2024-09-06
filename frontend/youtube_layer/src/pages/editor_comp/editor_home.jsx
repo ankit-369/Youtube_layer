@@ -99,7 +99,8 @@ const handleCloseVideoPage = () => {
       setLoading(false);
       if (videoResponse.data.success) {
         console.log("hah success");
-
+      }else{
+        console.log(videoResponse.data)
       }
     } catch (error) {
       console.error('Error uploading video:', error);
@@ -137,7 +138,7 @@ const handleCloseVideoPage = () => {
 
         {/* Right Section */}
         <div className="flex-1 p-4">
-          <h1 className="text-2xl font-bold mb-4">Uploaded Videos</h1>
+          <h1 className="text-2xl font-bold mb-4">Sended videos</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
             {sendedvideo.map((video, index) => (

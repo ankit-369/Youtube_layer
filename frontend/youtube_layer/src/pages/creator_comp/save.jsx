@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import  { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+// import { FaGithub, FaTwitter } from 'react-icons/fa';
 
 function Save() {
-    const navigate = useNavigate();
-
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Extract token from query parameter
@@ -21,8 +21,13 @@ function Save() {
   },[]);
 
   return (
-    <div>
-My Protected Component    </div>
+    <>
+      this can be home page
+
+
+
+
+    </>
   );
 }
 

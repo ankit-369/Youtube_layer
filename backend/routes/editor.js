@@ -73,7 +73,7 @@ router.get('/image/:imageName', (req, res) => {
     res.sendFile(imagePath);
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ message: 'Internal Server in editor js Error' });
   }
 });
 
@@ -81,10 +81,10 @@ router.get('/image/:imageName', (req, res) => {
 //   Send video to user
 const videoFileSchema = z.object({
   type: z.string().refine((type) => {
-    const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime'];
+    const allowedTypes = ['video/mp4'];
     return allowedTypes.includes(type);
   }, {
-    message: 'Invalid file format. Please upload a valid video file (MP4, MPEG, or QuickTime).'
+    message: 'Invalid file format. Please upload a valid video file (MP4).'
   }),
 });
 const imageFileSchema = z.object({
@@ -116,7 +116,7 @@ const storage = multer.diskStorage({
       }
 
       // Validate file type
-      const { type } = fileSchema.parse({ type: file.mimetype });
+     fileSchema.parse({ type: file.mimetype });
 
       // Generate unique filename
       const uniqueString = uuidv4();
@@ -127,15 +127,23 @@ const storage = multer.diskStorage({
       cb(null, filename);
     } catch (error) {
       // Handle error properly
-      console.error('Error handling file:', error);
-      cb(error); // Pass the error to Multer
+      if (error instanceof z.ZodError) {
+        // Extract error message from Zod validation
+        const errorMessage = error.errors[0]?.message || 'Invalid file format.';
+        console.error('Validation Error in editor js:', errorMessage);
+        cb(new Error(errorMessage)); // Pass the error message to Multer
+      } else {
+        console.error('Error handling file in editor js:', error.message);
+        cb(error); // Pass the generic error to Multer
+      }
     }
   }
 });
 
 const upload = multer({ storage: storage });
 
-router.post('/sendvideo', upload.fields([{ name: 'video' }, { name: 'thumbnail' }]), async (req, res) => {
+router.post('/sendvideo', upload.fields([{ name: 'video' ,maxCount: 1}, { name: 'thumbnail',maxCount: 1 }]), async (req, res,err) => {
+ 
   try {
     const creator_string = req.body.search;
     const creator_data = await users.findOne({
@@ -153,12 +161,16 @@ router.post('/sendvideo', upload.fields([{ name: 'video' }, { name: 'thumbnail' 
       editor_email = decode.email
       
       // Access the uploaded files
-      const videoFile = req.files['video'][0];
-      const thumbnailFile = req.files['thumbnail'][0];
-      
       // const video_name = req.file.filename;
+      const videoFile = req.files['video'][0];
       const video_name = videoFile.filename;
-      const thumbnail_name = thumbnailFile.filename;
+      
+      let thumbnail_name = "no thumbinail";
+      if(req.files['thumbnail']){
+        const thumbnailFile = req.files['thumbnail'][0];
+         thumbnail_name = thumbnailFile.filename;
+
+      }
 
       const creator_email = creator_data.email;
       const video_title = req.body.videotitle;
@@ -174,7 +186,6 @@ router.post('/sendvideo', upload.fields([{ name: 'video' }, { name: 'thumbnail' 
         video_title,
         video_description
       }
-      try{
 
         const incertvideo = await videos.create({
           editor_email ,
@@ -186,19 +197,23 @@ router.post('/sendvideo', upload.fields([{ name: 'video' }, { name: 'thumbnail' 
           video_description 
       })
     
+      if(incertvideo){
         res.json({
           success: true,
         message: 'Video uploaded successfully',
         
         });
-      }catch(e){
+
+      }else{
+
         res.status(500).json({
           success:false,
           message: 'Failed to upload video',
-          error: e.message
-
+  
         })
       }
+      
+      
 
 
 
